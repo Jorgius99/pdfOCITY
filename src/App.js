@@ -64,14 +64,13 @@ function App() {
         cityInfo.image = `https://eu2.contabostorage.com/7fb97413b6c243adb4347dafa02551a9:ocity/heritage/images/${cityInfo.image}`;
         const base64Image = await convertImageToBase64(cityInfo.image, noAvailableImage);
       
-        // Establecer el tamaño de fuente y agregar el nombre del elemento
-        doc.setFontSize(18);
+        // Título del documento
+        doc.setFontSize(15);
         doc.setFont('helvetica', 'bold');
         doc.text(`${cityInfo.name}`, 10, 50);
       
-        // Información de país, fecha de creación, organización y demás
         doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
+        // Información básica
         doc.text(`Country: `, 10, 60);
         doc.text(`Creation date: `, 10, 70);
         doc.text(`Organization or Personal Information: `, 10, 80);
@@ -85,90 +84,62 @@ function App() {
         doc.text(`${cityInfo.email}`, 30, 90);
         doc.text(`${cityInfo.latitude}, ${cityInfo.longitude}`, 50, 100);
       
-        // Añadir la imagen principal justo debajo de la localización
+        // Imagen principal
         if (cityInfo.image) {
-          doc.addImage(base64Image, 'JPEG', 10, 110, 190, 100); // Imagen más grande y centrada
+          doc.addImage(base64Image, 'JPEG', 10, 110, 190, 100); // Imagen centrada
         }
       
-        // Descripciones cortas justo debajo de la imagen
-const shortDescriptionY = 220; // Posición Y debajo de la imagen
-const maxLineWidth = 180;
-
-// Encabezado en negrita para "Short Description"
-doc.setFont('helvetica', 'bold');
-doc.text('Short Description:', 10, shortDescriptionY);
-
-// Contenido en texto normal
-doc.setFont('helvetica', 'normal');
-const shortDescriptionLines = doc.splitTextToSize(
-  cityInfo.short_heritage_description,
-  maxLineWidth
-);
-doc.text(shortDescriptionLines, 10, shortDescriptionY + 5); // Espacio ajustado debajo del encabezado
-
-// Encabezado en negrita para "Short Local Description"
-doc.setFont('helvetica', 'bold');
-doc.text('Short Local Description:', 10, shortDescriptionY + 25); // Separación suficiente
-
-// Contenido en texto normal
-doc.setFont('helvetica', 'normal');
-const shortLocalDescriptionLines = doc.splitTextToSize(
-  cityInfo.short_local_heritage_description,
-  maxLineWidth
-);
-doc.text(shortLocalDescriptionLines, 10, shortDescriptionY + 30); // Ajuste para evitar solapamiento
-
+        // Descripciones cortas
+        const shortDescriptionY = 220; // Posición Y debajo de la imagen
+        const maxLineWidth = 180;
       
-        // Crear una nueva página para el resto de los datos
+        doc.setFont('helvetica', 'bold');
+        doc.text('Short Description:', 10, shortDescriptionY);
+      
+        doc.setFont('helvetica', 'normal');
+        const shortDescriptionLines = doc.splitTextToSize(
+          cityInfo.short_heritage_description,
+          maxLineWidth
+        );
+        doc.text(shortDescriptionLines, 10, shortDescriptionY + 10);
+      
+        // Crear una nueva página
         doc.addPage();
       
-        // Configurar la tabla de descripciones largas
-        const extendedDescriptionLines = doc.splitTextToSize(cityInfo.extended_heritage_description, maxLineWidth / 2);
-        const extendedLocalDescriptionLines = doc.splitTextToSize(cityInfo.extended_local_heritage_description, maxLineWidth / 2);
+        // Descripción extendida
+        doc.setFont('helvetica', 'bold');
+        doc.text('Extended Description:', 10, 30);
       
-        const tableColumnHeaders = ["Extended Description", "Extended Local Description"];
-        const tableData = [
-          [extendedDescriptionLines.join('\n'), extendedLocalDescriptionLines.join('\n')]
-        ];
+        doc.setFont('helvetica', 'normal');
+        const extendedDescriptionLines = doc.splitTextToSize(
+          cityInfo.extended_heritage_description,
+          maxLineWidth
+        );
+        doc.text(extendedDescriptionLines, 10, 40);
       
-        doc.autoTable({
-          head: [tableColumnHeaders],
-          body: tableData,
-          startY: 30, // Ajustar el inicio de la tabla en la nueva página
-          styles: {
-            fontSize: 10,
-            cellPadding: 3,
-          },
-          columnStyles: {
-            0: { cellWidth: 90 }, // Ancho de la columna 1
-            1: { cellWidth: 90 }, // Ancho de la columna 2
-          },
-          didDrawPage: (data) => {
-            let finalY = data.cursor.y; // Obtiene la posición Y donde termina la tabla
+        // Otros datos adicionales
+        let finalY = 40 + extendedDescriptionLines.length * 5; // Calcular posición Y después del texto
+        doc.setFont('helvetica', 'bold');
+        doc.text('Fields of the heritage:', 10, finalY + 10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Cultural: ${cityInfo.heritageField?.name}`, 10, finalY + 20);
       
-            // Añadir más información
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Fields of the heritage:', 10, finalY + 10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Cultural: ${cityInfo.heritageField?.name}`, 10, finalY + 20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Tags:', 10, finalY + 30);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${cityInfo.tags?.join(', ')}`, 10, finalY + 40);
       
-            doc.setFont('helvetica', 'bold');
-            doc.text('Tags:', 10, finalY + 30);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${cityInfo.tags?.join(', ')}`, 10, finalY + 40);
-      
-            doc.setFont('helvetica', 'bold');
-            doc.text('Links of Interest:', 10, finalY + 50);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(0, 0, 255);
-            doc.setTextColor(0, 0, 0);
-          },
-        });
+        doc.setFont('helvetica', 'bold');
+        doc.text('Links of Interest:', 10, finalY + 50);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 255); // Si necesitas hipervínculos, aquí puedes formatear
+        doc.setTextColor(0, 0, 0); // Volver al color negro
       
         // Guardar el PDF
         doc.save(`${cityInfo.name}.pdf`);
       };
+      
+      
       
 
   return (
